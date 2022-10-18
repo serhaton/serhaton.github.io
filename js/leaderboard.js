@@ -17,8 +17,7 @@ const get = async () => {
 const load = async () => {
   leaderboardObject = await get();
   // const { fields: { contents: leaders } } = leaderboardObject.leaders;
-
-  const leaderboardList = eById('leaderboard-list');
+  const leaderboardList = eById('project-list');
   leaderboardList.innerHTML = "";
 
   eById('best').innerHTML = leaderboardObject.top_games[0]?.fields?.score || 0;
@@ -83,7 +82,7 @@ const submit = async (gameAddress, walletSigner, onComplete) => {
     onCompleted: async () => {
       load();
       ethos.hideWallet();
-      onComplete(); //loadGames();
+      onComplete(); //loadProjects();
     }
   })
 } 

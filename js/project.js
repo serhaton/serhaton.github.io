@@ -23,7 +23,7 @@ const DASHBOARD_LINK = 'https://ethoswallet.xyz/dashboard';
 
 let walletSigner;
 let projects; //games
-let activeProjectAddress; //activeGameAddress
+let activeProjectAddress; //activeProjectAddress
 let walletContents = {};
 //let topTile = 2;
 let contentsInterval;
@@ -200,7 +200,7 @@ async function loadProjects() {
     return;
   }
   removeClass(eById('loading-projects'), 'hidden');
-
+//debugger;
   const projectsElement = eById('project-list');
   projectsElement.innerHTML = "";
   
@@ -234,48 +234,49 @@ async function loadProjects() {
 
   for (const project of projects) {
     const projectElement = document.createElement('DIV');
-    /*let topGames = leaderboard.topGames();
-    if (topGames.length === 0) topGames = [];
-    const leaderboardItemIndex = topGames.findIndex(
-      (top_game) => top_game.fields.game_id === game.address
+    
+    let topProjects = []; // leaderboard.topGames();
+    if (topProjects.length === 0) topProjects = [];
+    const leaderboardItemIndex = topProjects.findIndex(
+      (top_game) => top_game.fields.game_id === project.address
     );
-    const leaderboardItem = topGames[leaderboardItemIndex];
-    const leaderboardItemUpToDate = leaderboardItem?.fields.score === game.score
-    */
+    const leaderboardItem = topProjects[leaderboardItemIndex];
+    const leaderboardItemUpToDate = leaderboardItem?.fields.score === project.score
+    
     addClass(projectElement, 'project-preview');
     setOnClick(
       projectElement,
       () => {
         addClass(eById('leaderboard'), 'hidden');
-        removeClass(eById('game'), 'hidden');
+        removeClass(eById('project'), 'hidden');
         setActiveProject(project);
       }
     );
 
     projectElement.innerHTML = `
       <div class='leader-stats flex-1'> 
-        <div class='leader-tile subsubtitle color${game.topTile + 1}'>
-          ${Math.pow(2, game.topTile + 1)}
+        <div class='leader-tile subsubtitle color${project.topTile + 1}'>
+          ${Math.pow(2, project.topTile + 1)}
         </div>
         <div class='leader-score'>
-          Score <span>${game.score}</span>
+          Score <span>${project.score}</span>
         </div>
       </div>
-      <div class='game-preview-right'> 
+      <div class='project-preview-right'> 
         <div class="${leaderboardItem && leaderboardItemUpToDate ? '' : 'hidden'}">
           <span class="light">Leaderboard:</span> <span class='bold'>${leaderboardItemIndex + 1}</span>
         </div>
-        <button class='potential-leaderboard-game ${leaderboardItemUpToDate ? 'hidden' : ''}' data-address='${game.address}'>
+        <button class='potential-leaderboard-project ${leaderboardItemUpToDate ? 'hidden' : ''}' data-address='${project.address}'>
           ${leaderboardItem ? 'Update' : 'Add To'} Leaderboard
         </button>
       </div>
     `
 
-    gamesElement.append(gameElement);
+    projectsElement.append(projectElement);
   }
 
   setOnClick(
-    eByClass('potential-leaderboard-game'),
+    eByClass('potential-leaderboard-project'),
     (e) => {
       const { dataset: { address } } = e.target;
       e.stopPropagation();
@@ -283,7 +284,7 @@ async function loadProjects() {
         address, 
         walletSigner, 
         () => {
-          loadGames();
+          loadProjects();
         }
       )
     }
@@ -322,18 +323,18 @@ async function setActiveGame(project) {
   modal.close();
   addClass(eById("leaderboard"), 'hidden');
   removeClass(eByClass('leaderboard-button'), 'selected')
-  removeClass(eById("game"), 'hidden');
+  removeClass(eById("project"), 'hidden');
   addClass(eByClass('play-button'), 'selected')
 
   setOnClick(
-    eById('submit-game-to-leaderboard'), 
+    eById('submit-project-to-leaderboard'), 
     () => {
       showLeaderboard();
       leaderboard.submit(
-        activeGameAddress, 
+        activeProjectAddress, 
         walletSigner, 
         () => {
-          loadGames();
+          loadProjects();
         }
       )
     }
@@ -342,8 +343,8 @@ async function setActiveGame(project) {
 
 function showLeaderboard() {
   leaderboard.load();
-  loadGames();
-  addClass(eById('game'), 'hidden');
+  loadProjects();
+  addClass(eById('project'), 'hidden');
   removeClass(eByClass('play-button'), 'selected');
   removeClass(eById('leaderboard'), 'hidden');
   addClass(eByClass('leaderboard-button'), 'selected');
@@ -372,19 +373,19 @@ const initializeClicks = () => {
       e.stopPropagation();
       await ethos.logout(walletSigner);
       walletSigner = null;
-      games = null;
-      activeGameAddress = null;
+      projects = null;
+      activeProjectAddress = null;
       walletContents = {};
 
       addClass(document.body, 'signed-out');
       removeClass(document.body, 'signed-in');
       addClass(eById('leaderboard'), 'hidden');
-      removeClass(eById('game'), 'hidden');
-      addClass(eById('loading-games'), 'hidden');
+      removeClass(eById('project'), 'hidden');
+      addClass(eById('loading-projects'), 'hidden');
 
-      board.clear();
+      project.clear();
       
-      modal.open('get-started', 'board', true);
+      modal.open('get-started', 'project', true);
     }
   );
 
@@ -393,12 +394,12 @@ const initializeClicks = () => {
   setOnClick(
     eByClass('play-button'), 
     () => {
-      if (games && games.length > 0) {
+      if (projects && projects.length > 0) {
         addClass(eById('leaderboard'), 'hidden');
-        removeClass(eById('game'), 'hidden');
-        setActiveGame(games[0]);
+        removeClass(eById('project'), 'hidden');
+        setActiveGame(projects[0]);
       } else if (walletSigner) {
-        eByClass('new-game')[0].onclick();
+        eByClass('new-project')[0].onclick();
       } else {
         ethos.showSignInModal();
       }
@@ -411,10 +412,10 @@ const initializeClicks = () => {
       modal.close();
       showLeaderboard();
       leaderboard.submit(
-        activeGameAddress, 
+        activeProjectAddress, 
         walletSigner, 
         () => {
-          loadGames();
+          loadProjects();
         }
       )
     }
@@ -514,13 +515,13 @@ const onWalletConnected = async ({ signer }) => {
       contentsInterval = setInterval(loadWalletContents, 3000)
     }
 
-    if (games.length === 0) {
-      modal.open('mint', 'board', true);  
+    if (projects.length === 0) {
+      modal.open('mint', 'project', true);  
     } else {
       modal.close();
 
-      if (games.length === 1) {
-        setActiveProject(games[0]);
+      if (projects.length === 1) {
+        setActiveProject(projects[0]);
       } else {
         showLeaderboard();
       }
@@ -542,7 +543,7 @@ const onWalletConnected = async ({ signer }) => {
       }
     );
   } else {
-    modal.open('get-started', 'board', true);
+    modal.open('get-started', 'project', true);
     setOnClick(eByClass('new-project'), ethos.showSignInModal)
     addClass(document.body, 'signed-out');
     removeClass(document.body, 'signed-in');
